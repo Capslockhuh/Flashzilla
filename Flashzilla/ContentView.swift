@@ -7,14 +7,6 @@
 
 import SwiftUI
 
-enum ActiveSheet: Identifiable {
-    case first, second
-    
-    var id: Int {
-        hashValue
-    }
-}
-
 struct ContentView: View {
     @Environment(\.accessibilityDifferentiateWithoutColor) var differentiateWithoutColor
     @Environment(\.accessibilityVoiceOverEnabled) var voiceOverEnabled
@@ -28,10 +20,6 @@ struct ContentView: View {
     @State private var isActive = true
     
     @State private var showingEditScreen = false
-    
-    @State private var showingSettingsScreen = false
-    
-    @State private var activeSheet: ActiveSheet?
     
     var body: some View {
         ZStack {
@@ -75,20 +63,9 @@ struct ContentView: View {
                     Spacer()
                     
                     Button {
-                        activeSheet = .first
                         showingEditScreen = true
                     } label: {
                         Image(systemName: "plus.circle")
-                            .padding()
-                            .background(.black.opacity(0.7))
-                            .clipShape(Circle())
-                    }
-                    
-                    Button {
-                        activeSheet = .second
-                        showingEditScreen = true
-                    } label: {
-                        Image(systemName: "gear.circle")
                             .padding()
                             .background(.black.opacity(0.7))
                             .clipShape(Circle())
@@ -158,16 +135,8 @@ struct ContentView: View {
                 isActive = false
             }
         }
-        .sheet(item: $activeSheet) { item in
-            switch item {
-            case .first:
-                EditCards()
-                    .onAppear(perform: resetCards)
-                    .onDisappear(perform: resetCards)
-            case .second:
-                Settings()
-            }
-        }
+        .sheet(isPresented: $showingEditScreen, onDismiss: resetCards, content: EditCards.init)
+                .onAppear(perform: resetCards)
 
     }
     

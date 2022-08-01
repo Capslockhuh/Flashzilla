@@ -27,7 +27,7 @@ struct CardView: View {
                         differentiateWithoutColor
                             ? .white
                             : .white
-                                .opacity(1 - Double(abs(offset.width / 50)))
+                            .opacity(1.5 - Double(abs(offset.width / 50)))
 
                     )
                     .background(
@@ -67,14 +67,14 @@ struct CardView: View {
             DragGesture()
                 .onChanged { gesture in
                     offset = gesture.translation
-                    feedback.prepare()
+                        feedback.prepare()
                 }
                 .onEnded { _ in
                     if abs(offset.width) > 100 {
                         if offset.width > 0 {
-                            feedback.notificationOccurred(.success)
+                                feedback.notificationOccurred(.success)
                         } else {
-                            feedback.notificationOccurred(.error)
+                                feedback.notificationOccurred(.error)
                         }
                         
                         removal?()
