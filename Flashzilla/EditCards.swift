@@ -9,11 +9,9 @@ import SwiftUI
 
 struct EditCards: View {
     @Environment(\.dismiss) var dismiss
-    @State private var cards = [Card]()
+    @StateObject var cards = Cards()
     @State private var newPrompt = ""
     @State private var newAnswer = ""
-    
-    let savePath = FileManager.documentsDirectory.appendingPathComponent("SavedData")
     
     var body: some View {
         NavigationView {
@@ -25,11 +23,11 @@ struct EditCards: View {
                 }
                 
                 Section {
-                    ForEach(0..<cards.count, id: \.self) { index in
+                    ForEach(0..<cards.cardStack.count, id: \.self) { index in
                         VStack(alignment: .leading) {
-                            Text(cards[index].prompt)
+                            Text(cards.cardStack[index].prompt)
                                 .font(.headline)
-                            Text(cards[index].answer)
+                            Text(cards.cardStack[index].answer)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -41,30 +39,12 @@ struct EditCards: View {
                 Button("Done", action: done)
             }
             .listStyle(.grouped)
-            .onAppear(perform: loadData)
+            .onAppear(perform: cards.loadData)
         }
     }
     
     func done() {
         dismiss()
-    }
-    
-    func loadData() {
-        do {
-            let data = try Data(contentsOf: savePath)
-            cards = try JSONDecoder().decode([Card].self, from: data)
-        } catch {
-            cards = []
-        }
-    }
-    
-    func saveData() {
-        do {
-            let data = try JSONEncoder().encode(cards)
-            try data.write(to: savePath, options: [.atomic, .completeFileProtection])
-        } catch {
-            print("Saving data has failed.")
-        }
     }
     
     func addCard() {
@@ -73,15 +53,15 @@ struct EditCards: View {
         guard trimmedPrompt.isEmpty == false && trimmedAnswer.isEmpty == false else { return }
         
         let card = Card(prompt: trimmedPrompt, answer: trimmedAnswer)
-        cards.insert(card, at: 0)
+        cards.cardStack.insert(card, at: 0)
         newPrompt = ""
         newAnswer = ""
-        saveData()
+        cards.saveData()
     }
     
     func removeCards(at offsets: IndexSet) {
-        cards.remove(atOffsets: offsets)
-        saveData()
+        cards.cardStack.remove(atOffsets: offsets)
+        cards.saveData()
     }
 }
 

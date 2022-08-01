@@ -12,7 +12,7 @@ struct ContentView: View {
     @Environment(\.accessibilityVoiceOverEnabled) var voiceOverEnabled
     @Environment(\.scenePhase) var scenePhase
     
-    @State private var cards = [Card]()
+    @StateObject var cards = Cards()
     
     @State private var timeRemaining = 100
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -20,8 +20,6 @@ struct ContentView: View {
     @State private var isActive = true
     
     @State private var showingEditScreen = false
-    
-    let savePath = FileManager.documentsDirectory.appendingPathComponent("SavedData")
     
     var body: some View {
         ZStack {
@@ -39,19 +37,19 @@ struct ContentView: View {
                     .clipShape(Capsule())
                 
                 ZStack {
-                    ForEach(0..<cards.count, id: \.self) { index in
-                        CardView(card: cards[index]) {
+                    ForEach(0..<cards.cardStack.count, id: \.self) { index in
+                        CardView(card: cards.cardStack[index]) {
                             withAnimation {
                                 removeCard(at: index)
                             }
                         }
-                            .stacked(at: index, in: cards.count)
-                            .allowsHitTesting(index == cards.count - 1)
-                            .accessibilityHidden(index < cards.count - 1)
+                        .stacked(at: index, in: cards.cardStack.count)
+                        .allowsHitTesting(index == cards.cardStack.count - 1)
+                        .accessibilityHidden(index < cards.cardStack.count - 1)
                     }
                 }
                 .allowsHitTesting(timeRemaining > 0)
-                if cards.isEmpty {
+                if cards.cardStack.isEmpty {
                     Button("Start Again", action: resetCards)
                         .padding()
                         .background(.white)
@@ -88,7 +86,7 @@ struct ContentView: View {
                     HStack {
                         Button {
                             withAnimation {
-                                removeCard(at: cards.count - 1)
+                                removeCard(at: cards.cardStack.count - 1)
                             }
                         } label: {
                             Image(systemName: "xmark.circle")
@@ -103,7 +101,7 @@ struct ContentView: View {
 
                         Button {
                             withAnimation {
-                                removeCard(at: cards.count - 1)
+                                removeCard(at: cards.cardStack.count - 1)
                             }
                         } label: {
                             Image(systemName: "checkmark.circle")
@@ -130,7 +128,7 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
-                if cards.isEmpty == false {
+                if cards.cardStack.isEmpty == false {
                     isActive = true
                 }
             } else {
@@ -144,29 +142,21 @@ struct ContentView: View {
     
     func removeCard(at index: Int) {
         guard index >= 0 else { return }
-        cards.remove(at: index)
+        cards.cardStack.remove(at: index)
         
-        if cards.isEmpty {
+        if cards.cardStack.isEmpty {
             isActive = false
         }
     }
     
     func resetCards() {
-        cards = [Card](repeating: Card.example, count: 10)
+        cards.cardStack = [Card](repeating: Card.example, count: 10)
         timeRemaining = 100
         isActive = true
-        loadData()
-    }
-    
-    func loadData() {
-        do {
-            let data = try Data(contentsOf: savePath)
-            cards = try JSONDecoder().decode([Card].self, from: data)
-        } catch {
-            cards = []
-        }
+        cards.loadData()
     }
 }
+    
 
 // Stack
 extension View {
